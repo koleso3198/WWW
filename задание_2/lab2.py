@@ -11,6 +11,9 @@
 Стек: pandas, numpy, re, nltk (только список стоп-слов), pymorphy3, scikit-learn, matplotlib.
 Метрики считаются ТОЛЬКО на 8 размеченных (dev) запросах; параметры по ним не подбираются.
 """
+
+# ПУНКТ 1. ИМПОРТЫ, КОНФИГУРАЦИЯ ОКРУЖЕНИЯ И ИССЛЕДОВАТЕЛЬСКИЙ АНАЛИЗ ДАННЫХ (EDA)
+
 import re
 import sys
 from pathlib import Path
@@ -83,6 +86,7 @@ def explore(docs, queries, rel, log):
     log(f"Эталонные ID, отсутствующие в корпусе: {missing or 'нет'}")
     log("")
 
+# ПУНКТ 2. NLP-ПРЕДОБРАБОТКА И БАЗОВЫЙ ПОИСК (BASELINE)
 
 # ------------------------------------------------------------------ 2. Предобработка
 def clean(text) -> str:
@@ -134,6 +138,7 @@ class BaselineSearch:
         order = np.argsort(-scores, kind="stable")[:k]
         return [(self.ids[i], float(scores[i])) for i in order if scores[i] > 0]
 
+# ПУНКТ 3. TF-IDF ВЕКТОРИЗАЦИЯ И МЕТРИКИ РАНЖИРОВАНИЯ
 
 # ------------------------------------------------------------------ 4. TF-IDF + cosine
 CONFIGS = {
@@ -196,12 +201,13 @@ def run_all(engine, queries):
             rows.append((qid, r, d, round(s, 6)))
     return pd.DataFrame(rows, columns=["query_id", "rank", "document_id", "score"])
 
+# ПУНКТ 4. АНАЛИЗ ОШИБОК, ЗАПУСК ПАЙПЛЛАЙНА И ЭКСПОРТ АРТЕФАКТОВ
 
 # ------------------------------------------------------------------ 6. Анализ ошибок
 def error_analysis(name, engine, docs, queries, rel_map, per_query, log, max_cases=3):
     title = docs.set_index("document_id")["title"].to_dict()
     qtext = queries.set_index("query_id")["query"].to_dict()
-    bad = [p for p in per_query if p[1] != 1]  # не на 1-м месте
+    bad = [p for p in per_query if p[1] != 1]
     log(f"=== АНАЛИЗ ОШИБОК (конфигурация {name}) ===")
     if not bad:
         log("На dev-запросах все релевантные документы на 1-м месте.\n")
